@@ -1,0 +1,71 @@
+package com.example.apppc_store.ui.navegacion
+
+import androidx.compose.runtime.*
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.apppc_store.model.entidades.Producto
+import com.example.apppc_store.ui.pantallas.PantallaCarrito
+import com.example.apppc_store.ui.pantallas.PantallaDetalleProducto
+import com.example.apppc_store.ui.pantallas.PantallaPrincipal
+import com.example.apppc_store.viewmodel.productos.ProductosViewModel
+import com.example.apppc_store.viewmodel.ventas.CarritoViewModel
+
+@Composable
+fun NavegacionPrincipal(
+    navController: NavHostController = rememberNavController(),
+    productosViewModel: ProductosViewModel,
+    carritoViewModel: CarritoViewModel
+) {
+    NavHost(
+        navController = navController,
+        startDestination = "principal"
+    ) {
+        composable("principal") {
+            PantallaPrincipal(
+                onProductoClick = { producto ->
+                    navController.navigate("detalle/${producto.id}")
+                },
+                onCarritoClick = {
+                    navController.navigate("carrito")
+                },
+                viewModel = productosViewModel
+            )
+        }
+        
+        composable("detalle/{productoId}") { backStackEntry ->
+            val productoId = backStackEntry.arguments?.getString("productoId") ?: ""
+            // TODO: Obtener producto por ID desde ViewModel
+            val producto = Producto(
+                id = productoId,
+                nombre = "Producto de Ejemplo",
+                descripcion = "Descripción del producto",
+                precio = 100.0,
+                categoria = "Categoría",
+                stock = 10
+            )
+            
+            PantallaDetalleProducto(
+                producto = producto,
+                onVolver = {
+                    navController.popBackStack()
+                },
+                viewModel = carritoViewModel
+            )
+        }
+        
+        composable("carrito") {
+            PantallaCarrito(
+                onConfirmarCompra = {
+                    // TODO: Implementar confirmación de compra
+                    navController.navigate("principal")
+                },
+                onVolver = {
+                    navController.popBackStack()
+                },
+                viewModel = carritoViewModel
+            )
+        }
+    }
+}
