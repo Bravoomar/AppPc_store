@@ -17,6 +17,8 @@ import com.example.apppc_store.viewmodel.productos.ProductosViewModel
 fun PantallaPrincipal(
     onProductoClick: (Producto) -> Unit,
     onCarritoClick: () -> Unit,
+    onArriendosClick: () -> Unit,
+    onAgregarProductoClick: () -> Unit,
     viewModel: ProductosViewModel
 ) {
     val productos by viewModel.productos.collectAsState()
@@ -35,7 +37,22 @@ fun PantallaPrincipal(
             )
         },
         floatingActionButton = {
-            // Eliminado botón de arriendos
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FloatingActionButton(
+                    onClick = onArriendosClick,
+                    modifier = Modifier.size(56.dp)
+                ) {
+                    Text("👤")
+                }
+                FloatingActionButton(
+                    onClick = onAgregarProductoClick,
+                    modifier = Modifier.size(56.dp)
+                ) {
+                    Text("➕")
+                }
+            }
         }
     ) { paddingValues ->
         Column(
