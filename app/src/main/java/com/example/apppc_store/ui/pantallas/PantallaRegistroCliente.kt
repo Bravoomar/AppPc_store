@@ -132,7 +132,7 @@ fun PantallaRegistroCliente(
             )
             
             // Mensaje de éxito
-            if (mensajeExito != null) {
+            mensajeExito?.let { mensaje ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -140,7 +140,7 @@ fun PantallaRegistroCliente(
                     )
                 ) {
                     Text(
-                        text = mensajeExito,
+                        text = mensaje,
                         modifier = Modifier.padding(16.dp),
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -148,7 +148,7 @@ fun PantallaRegistroCliente(
             }
             
             // Mensaje de error
-            if (error != null) {
+            error?.let { mensajeError ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -156,7 +156,7 @@ fun PantallaRegistroCliente(
                     )
                 ) {
                     Text(
-                        text = error,
+                        text = mensajeError,
                         modifier = Modifier.padding(16.dp),
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )

@@ -40,7 +40,7 @@ class RepositorioClientesImpl : RepositorioClientes {
         emit(clientesMock.filter { 
             it.nombre.contains(consulta, ignoreCase = true) ||
             it.email.contains(consulta, ignoreCase = true) ||
-            it.telefono.contains(consulta, ignoreCase = true)
+            it.telefono?.contains(consulta, ignoreCase = true) == true
         })
     }
 

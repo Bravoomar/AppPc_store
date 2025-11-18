@@ -15,5 +15,6 @@ data class Producto(
 )
 
 enum class TipoProducto {
-    VENTA
+    VENTA,
+    ARRIENDO
 }
