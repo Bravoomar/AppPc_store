@@ -8,6 +8,7 @@ interface RepositorioClientes {
     suspend fun obtenerClientePorId(id: String): Flow<Cliente?>
     suspend fun obtenerClientePorEmail(email: String): Flow<Cliente?>
     suspend fun buscarClientes(consulta: String): Flow<List<Cliente>>
+    suspend fun autenticarAdministrador(email: String, codigoAcceso: String): Flow<Cliente?>
     suspend fun insertarCliente(cliente: Cliente)
     suspend fun actualizarCliente(cliente: Cliente)
     suspend fun eliminarCliente(id: String)

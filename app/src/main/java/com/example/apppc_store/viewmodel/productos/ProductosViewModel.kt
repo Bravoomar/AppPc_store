@@ -5,12 +5,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.apppc_store.model.entidades.Producto
 import com.example.apppc_store.model.entidades.TipoProducto
 import com.example.apppc_store.model.repositorios.RepositorioProductos
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ProductosViewModel(
+@HiltViewModel
+class ProductosViewModel @Inject constructor(
     private val repositorioProductos: RepositorioProductos
 ) : ViewModel() {
 

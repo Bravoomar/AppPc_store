@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.apppc_store.model.entidades.Cliente
 import com.example.apppc_store.model.repositorios.RepositorioClientes
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ClientesViewModel(
+@HiltViewModel
+class ClientesViewModel @Inject constructor(
     private val repositorioClientes: RepositorioClientes
 ) : ViewModel() {
 

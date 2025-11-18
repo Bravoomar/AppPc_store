@@ -7,6 +7,15 @@ data class Cliente(
     val telefono: String? = null,
     val direccion: String? = null,
     val esActivo: Boolean = true,
+    val rol: RolCliente = RolCliente.CLIENTE,
     val fechaCreacion: Long = System.currentTimeMillis(),
     val fechaActualizacion: Long = System.currentTimeMillis()
-)
+) {
+    val esAdministrador: Boolean
+        get() = rol == RolCliente.ADMIN
+}
+
+enum class RolCliente {
+    ADMIN,
+    CLIENTE
+}

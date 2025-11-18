@@ -47,14 +47,14 @@ fun NavegacionPrincipal(
         
         composable("detalle/{productoId}") { backStackEntry ->
             val productoId = backStackEntry.arguments?.getString("productoId") ?: ""
-            // TODO: Obtener producto por ID desde ViewModel
-            val producto = Producto(
+            // Obtener producto por ID desde ViewModel
+            val producto = productosViewModel.productos.value.find { it.id == productoId } ?: Producto(
                 id = productoId,
-                nombre = "Producto de Ejemplo",
-                descripcion = "Descripción del producto",
-                precio = 100.0,
-                categoria = "Categoría",
-                stock = 10
+                nombre = "Producto no encontrado",
+                descripcion = "No se pudo cargar el producto",
+                precio = 0.0,
+                categoria = "Sin categoría",
+                stock = 0
             )
             
             PantallaDetalleProducto(
