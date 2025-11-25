@@ -1,14 +1,19 @@
 package com.example.apppc_store.model.repositorios
 
 import com.example.apppc_store.api.ClienteApiService
+import com.example.apppc_store.data.local.dao.ClienteDao
+import com.example.apppc_store.data.local.entities.ClienteEntity
 import com.example.apppc_store.model.entidades.Cliente
 import com.example.apppc_store.model.entidades.RolCliente
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class RepositorioClientesImpl @Inject constructor(
-    private val clienteApiService: ClienteApiService
+    private val clienteApiService: ClienteApiService,
+    private val clienteDao: ClienteDao
 ) : RepositorioClientes {
 
     // Datos mock para pruebas (fallback si API falla)
@@ -42,67 +47,36 @@ class RepositorioClientesImpl @Inject constructor(
 
     override suspend fun obtenerTodosLosClientes(): Flow<List<Cliente>> = flow {
         try {
-            val response = clienteApiService.obtenerTodosLosClientes()
-            if (response.isSuccessful) {
-                emit(response.body() ?: emptyList())
+            val clientesLocal = clienteDao.obtenerTodosLosClientes().first()
+            if (clientesLocal.isEmpty()) {
+                // Si no hay clientes en Room, insertar los mock
+                clientesMock.forEach { cliente ->
+                    clienteDao.insertarCliente(ClienteEntity.fromCliente(cliente))
+                }
+                emit(clientesMock)
             } else {
-                emit(clientesMock.toList())
+                emit(clientesLocal.map { it.toCliente() })
             }
         } catch (e: Exception) {
-            emit(clientesMock.toList())
+            emit(clientesMock)
         }
     }
 
-    override suspend fun obtenerClientePorId(id: String): Flow<Cliente?> = flow {
-        try {
-            val response = clienteApiService.obtenerClientePorId(id)
-            if (response.isSuccessful) {
-                emit(response.body())
-            } else {
-                emit(clientesMock.find { it.id == id })
-            }
-        } catch (e: Exception) {
-            emit(clientesMock.find { it.id == id })
+    override suspend fun obtenerClientePorId(id: String): Flow<Cliente?> {
+        return clienteDao.obtenerClientePorId(id).map { entity ->
+            entity?.toCliente()
         }
     }
 
-    override suspend fun obtenerClientePorEmail(email: String): Flow<Cliente?> = flow {
-        try {
-            val response = clienteApiService.obtenerTodosLosClientes()
-            if (response.isSuccessful) {
-                val clientes = response.body() ?: emptyList()
-                emit(clientes.find { it.email.equals(email, ignoreCase = true) })
-            } else {
-                emit(clientesMock.find { it.email.equals(email, ignoreCase = true) })
-            }
-        } catch (e: Exception) {
-            emit(clientesMock.find { it.email.equals(email, ignoreCase = true) })
+    override suspend fun obtenerClientePorEmail(email: String): Flow<Cliente?> {
+        return clienteDao.obtenerClientePorEmail(email).map { entity ->
+            entity?.toCliente()
         }
     }
 
-    override suspend fun buscarClientes(consulta: String): Flow<List<Cliente>> = flow {
-        try {
-            val response = clienteApiService.obtenerTodosLosClientes()
-            if (response.isSuccessful) {
-                val clientes = response.body() ?: emptyList()
-                emit(clientes.filter {
-                    it.nombre.contains(consulta, ignoreCase = true) ||
-                    it.email.contains(consulta, ignoreCase = true) ||
-                    it.telefono?.contains(consulta, ignoreCase = true) == true
-                })
-            } else {
-                emit(clientesMock.filter {
-                    it.nombre.contains(consulta, ignoreCase = true) ||
-                    it.email.contains(consulta, ignoreCase = true) ||
-                    it.telefono?.contains(consulta, ignoreCase = true) == true
-                })
-            }
-        } catch (e: Exception) {
-            emit(clientesMock.filter {
-                it.nombre.contains(consulta, ignoreCase = true) ||
-                it.email.contains(consulta, ignoreCase = true) ||
-                it.telefono?.contains(consulta, ignoreCase = true) == true
-            })
+    override suspend fun buscarClientes(consulta: String): Flow<List<Cliente>> {
+        return clienteDao.buscarClientes(consulta).map { entities ->
+            entities.map { it.toCliente() }
         }
     }
 
@@ -111,22 +85,14 @@ class RepositorioClientesImpl @Inject constructor(
         codigoAcceso: String
     ): Flow<Cliente?> = flow {
         try {
-            val response = clienteApiService.obtenerTodosLosClientes()
-            if (response.isSuccessful) {
-                val clientes = response.body() ?: emptyList()
-                val administrador = clientes.find { cliente ->
-                    cliente.rol == RolCliente.ADMIN && cliente.email.equals(email.trim(), ignoreCase = true)
-                }
-                val esCodigoValido = codigoAcceso.trim() == codigoAccesoAdministrador
-                emit(if (administrador != null && esCodigoValido) administrador else null)
-            } else {
-                val administrador = clientesMock.find { cliente ->
-                    cliente.rol == RolCliente.ADMIN && cliente.email.equals(email.trim(), ignoreCase = true)
-                }
-                val esCodigoValido = codigoAcceso.trim() == codigoAccesoAdministrador
-                emit(if (administrador != null && esCodigoValido) administrador else null)
-            }
+            val clienteEntity = clienteDao.obtenerClientePorEmail(email.trim()).first()
+            val cliente = clienteEntity?.toCliente()
+            val esCodigoValido = codigoAcceso.trim() == codigoAccesoAdministrador
+            val esAdministrador = cliente?.rol == RolCliente.ADMIN
+            
+            emit(if (cliente != null && esAdministrador && esCodigoValido) cliente else null)
         } catch (e: Exception) {
+            // Fallback a mock si hay error
             val administrador = clientesMock.find { cliente ->
                 cliente.rol == RolCliente.ADMIN && cliente.email.equals(email.trim(), ignoreCase = true)
             }
@@ -139,8 +105,10 @@ class RepositorioClientesImpl @Inject constructor(
         try {
             clienteApiService.crearCliente(cliente)
         } catch (e: Exception) {
-            // Fallback to mock
-            clientesMock.add(cliente)
+            // Si falla la API, guardar solo en local
+        } finally {
+            // Siempre guardar en Room
+            clienteDao.insertarCliente(ClienteEntity.fromCliente(cliente))
         }
     }
 
@@ -148,11 +116,10 @@ class RepositorioClientesImpl @Inject constructor(
         try {
             clienteApiService.actualizarCliente(cliente.id, cliente)
         } catch (e: Exception) {
-            // Fallback to mock
-            val index = clientesMock.indexOfFirst { it.id == cliente.id }
-            if (index != -1) {
-                clientesMock[index] = cliente
-            }
+            // Si falla la API, actualizar solo en local
+        } finally {
+            // Siempre actualizar en Room
+            clienteDao.actualizarCliente(ClienteEntity.fromCliente(cliente))
         }
     }
 
@@ -160,8 +127,10 @@ class RepositorioClientesImpl @Inject constructor(
         try {
             clienteApiService.eliminarCliente(id)
         } catch (e: Exception) {
-            // Fallback to mock
-            clientesMock.removeAll { it.id == id }
+            // Si falla la API, eliminar solo en local
+        } finally {
+            // Siempre eliminar en Room
+            clienteDao.eliminarCliente(id)
         }
     }
 }
